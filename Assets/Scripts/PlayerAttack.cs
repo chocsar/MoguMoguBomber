@@ -7,30 +7,25 @@ public class PlayerAttack : MonoBehaviour
 {
     public int playerNumber = 1;
 
-    public Transform attackTransform;
-    public Rigidbody bomb;
-    public Slider aimSlider;
-    public float minLaunchForce = 15f; //最小でもある程度のパワーがある設定
+    public float minLaunchForce = 15f;//最小でもある程度のパワーがある設定
     public float maxLaunchForce = 30f;
-    public float maxChargeTime = 0.75f;//どれくらいの時間でmaxまで行くかを調整できる
+    public float maxChargeTime = 0.75f;//どれくらいの時間でmaxまで行くか
 
-    public AudioSource attackAudio;
-    public AudioClip chargingClip;
-    public AudioClip fireClip;
+    [SerializeField] private Transform attackTransform;//爆弾の発射位置
+    [SerializeField] private Rigidbody bomb;
+    [SerializeField] private Slider aimSlider;
+    [SerializeField] private AudioSource attackAudio;
+    [SerializeField] private AudioClip chargingClip;
+    [SerializeField] private AudioClip fireClip;
+    [SerializeField] private GameObject powerUpEffect;
+    private Animator animator;
 
-    public bool powerUp;
-    public GameObject powerUpEffect;
-
-
-    private string fireButton;
+    private string fireButton;//発射ボタンを示す文字列
     private float currentLaunchForce;
     private float chargeSpeed;//チャージ速度
     private bool fired;//発射を1回だけに限定するためのフラグ
-
-    private Animator animator;
-
+    private bool powerUp;
     private int powerUpCount;
-
 
 
     private void Awake()
@@ -43,7 +38,6 @@ public class PlayerAttack : MonoBehaviour
         currentLaunchForce = minLaunchForce;
         aimSlider.value = minLaunchForce;
         fired = false;
-
     }
 
     private void OnDisable()
@@ -57,7 +51,7 @@ public class PlayerAttack : MonoBehaviour
     {
         fireButton = "Fire" + playerNumber;
 
-        //パラメータから、変化スピードを計算する(キョリ÷時間)
+        //パラメータから変化スピードを計算する(キョリ÷時間)
         //スクリプトで使うのは時間ではなく速さ
         chargeSpeed = (maxLaunchForce - minLaunchForce) / maxChargeTime;
     }
@@ -66,17 +60,9 @@ public class PlayerAttack : MonoBehaviour
     {
         aimSlider.value = minLaunchForce;
 
-        //最大までチャージした時
-        if (currentLaunchForce >= maxLaunchForce && !fired)
-        {
-            currentLaunchForce = maxLaunchForce;
 
-            fired = true;
-
-            //アニメーション
-            animator.SetTrigger("Attack");
-        }
-        else if (Input.GetButtonDown(fireButton) && !fired) //あとでGetButtonに変更する
+        //ボタンを押した時
+        if (Input.GetButtonDown(fireButton) && !fired) //あとでGetButtonに変更する
         {
             //forceを初期値に設定
             currentLaunchForce = minLaunchForce;
@@ -86,36 +72,47 @@ public class PlayerAttack : MonoBehaviour
             attackAudio.Play();
 
         }
+        //ボタンを押している間
         else if (Input.GetButton(fireButton) && !fired)
         {
-            //ボタンを押している時
             //力を増やしていく
             currentLaunchForce += chargeSpeed * Time.deltaTime;
-            //UIも更新する
+
+            //UIを更新する
             aimSlider.value = currentLaunchForce;
 
+            //最大までチャージした時
+            if (currentLaunchForce >= maxLaunchForce)
+            {
+                currentLaunchForce = maxLaunchForce;
 
+                fired = true;
+
+                //アニメーション
+                animator.SetTrigger("Attack");
+            }
         }
+        //ボタンを離した時
         else if (Input.GetButtonUp(fireButton) && !fired)
         {
-            //ボタンを離した時
             fired = true;
+
             //アニメーション
             animator.SetTrigger("Attack");
         }
 
     }
 
-    public void Fire()
+    public void Fire()//アニメーションイベントで呼び出す
     {
         //3way
         //AttackTransformのローカルの位置と回転を変えてから発射する
         //位置と角度の調整はもっとうまいやり方ありそう
-
         if (powerUp)
         {
             for (int i = 0; i < 3; i++)
             {
+                //発射位置、角度の計算
                 switch (i)
                 {
                     case 0:
@@ -135,8 +132,7 @@ public class PlayerAttack : MonoBehaviour
 
                 }
 
-                //発射位置、角度を設定してインスタンス化 
-                //同時にrigidbodyへの参照を格納している
+                //爆弾を生成
                 Rigidbody bombInstance = Instantiate(bomb, attackTransform.position, attackTransform.rotation) as Rigidbody;
 
                 //爆発音を鳴らすのは一個だけにする
@@ -145,7 +141,7 @@ public class PlayerAttack : MonoBehaviour
                     bombInstance.GetComponent<BombExplosion>().ChangeSoundFlag();
                 }
 
-                //速度の設定　→　方向 * 大きさ
+                //速度の設定 → 方向 * 大きさ
                 bombInstance.velocity = attackTransform.forward * currentLaunchForce;
 
             }
@@ -157,7 +153,7 @@ public class PlayerAttack : MonoBehaviour
             bombInstance.velocity = attackTransform.forward * currentLaunchForce;
         }
 
-        //オーディオ
+        //攻撃のサウンド
         attackAudio.clip = fireClip;
         attackAudio.Play();
 
@@ -165,15 +161,10 @@ public class PlayerAttack : MonoBehaviour
         currentLaunchForce = minLaunchForce;
     }
 
-    public void ChangeFireFlag()
+
+    public void ChangeFireFlag()//アニメーションイベントで呼び出す
     {
         fired = false;
-    }
-
-    //移動のアニメーションを制御するために取得する (今は未使用)
-    public bool GetFireFlag()
-    {
-        return fired;
     }
 
     public void PowerUp()
@@ -185,15 +176,13 @@ public class PlayerAttack : MonoBehaviour
     {
         //追加でおにぎりとった場合に対応する
         powerUpCount++;
-        //Debug.Log(m_PowerUpCount)
-        ;
+
         powerUp = true;
         powerUpEffect.SetActive(true);
 
         yield return new WaitForSeconds(20f);
 
         powerUpCount--;
-        //Debug.Log(m_PowerUpCount);
 
         if (powerUpCount == 0)
         {

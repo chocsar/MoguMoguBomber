@@ -15,9 +15,7 @@ public class PlayerMovement : MonoBehaviour
     private string movementYAxisName;
     private float movementInputValueX;
     private float movementInputValueY;
-
     private float currentAngle;
-
 
     private void Awake()
     {
@@ -31,7 +29,6 @@ public class PlayerMovement : MonoBehaviour
 
         movementInputValueX = 0f;
         movementInputValueY = 0f;
-
     }
 
     private void OnDisable()
