@@ -5,108 +5,103 @@ using UnityEngine.UI;
 
 public class PlayerAttack : MonoBehaviour
 {
-    public int m_PlayerNumber = 1;
+    public int playerNumber = 1;
 
-    public Transform m_AttackTransform;
-    public Rigidbody m_Bomb;
-    public Slider m_AimSlider;
-    public float m_MinLaunchForce = 15f; //最小でもある程度のパワーがある設定
-    public float m_MaxLaunchForce = 30f;
-    public float m_MaxChargeTime = 0.75f;//どれくらいの時間でmaxまで行くかを調整できる
+    public Transform attackTransform;
+    public Rigidbody bomb;
+    public Slider aimSlider;
+    public float minLaunchForce = 15f; //最小でもある程度のパワーがある設定
+    public float maxLaunchForce = 30f;
+    public float maxChargeTime = 0.75f;//どれくらいの時間でmaxまで行くかを調整できる
 
-    public AudioSource m_AttackAudio;
-    public AudioClip m_ChargingClip;
-    public AudioClip m_FireClip;
+    public AudioSource attackAudio;
+    public AudioClip chargingClip;
+    public AudioClip fireClip;
 
-    public bool m_PowerUp;
-    public GameObject m_PowerUpEffect;
+    public bool powerUp;
+    public GameObject powerUpEffect;
 
 
-    private string m_FireButton;
-    private float m_CurrentLaunchForce;
-    private float m_ChargeSpeed;//チャージ速度
-    private bool m_Fired;//発射を1回だけに限定するためのフラグ
+    private string fireButton;
+    private float currentLaunchForce;
+    private float chargeSpeed;//チャージ速度
+    private bool fired;//発射を1回だけに限定するためのフラグ
 
-    private Animator m_Animator;
+    private Animator animator;
 
-    private int m_PowerUpCount;
+    private int powerUpCount;
 
 
 
     private void Awake()
     {
-        m_Animator = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
     }
 
     private void OnEnable()
     {
-        m_CurrentLaunchForce = m_MinLaunchForce;
-        m_AimSlider.value = m_MinLaunchForce;
-        m_Fired = false;      
+        currentLaunchForce = minLaunchForce;
+        aimSlider.value = minLaunchForce;
+        fired = false;
 
     }
 
     private void OnDisable()
     {
-        m_PowerUpCount = 0;
-        m_PowerUp = false;
-        m_PowerUpEffect.SetActive(false);
+        powerUpCount = 0;
+        powerUp = false;
+        powerUpEffect.SetActive(false);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
-        m_FireButton = "Fire" + m_PlayerNumber;
-
+        fireButton = "Fire" + playerNumber;
 
         //パラメータから、変化スピードを計算する(キョリ÷時間)
         //スクリプトで使うのは時間ではなく速さ
-        m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
+        chargeSpeed = (maxLaunchForce - minLaunchForce) / maxChargeTime;
     }
 
-    // Update is called once per frame
     void Update()
     {
-
-
-        m_AimSlider.value = m_MinLaunchForce;
+        aimSlider.value = minLaunchForce;
 
         //最大までチャージした時
-        if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
+        if (currentLaunchForce >= maxLaunchForce && !fired)
         {
-            m_CurrentLaunchForce = m_MaxLaunchForce;
+            currentLaunchForce = maxLaunchForce;
 
-            m_Fired = true;
+            fired = true;
 
             //アニメーション
-            m_Animator.SetTrigger("Attack");
+            animator.SetTrigger("Attack");
         }
-        else if (Input.GetButtonDown(m_FireButton) && !m_Fired) //あとでGetButtonに変更する
+        else if (Input.GetButtonDown(fireButton) && !fired) //あとでGetButtonに変更する
         {
             //forceを初期値に設定
-            m_CurrentLaunchForce = m_MinLaunchForce;
+            currentLaunchForce = minLaunchForce;
 
             //オーディオ
-            m_AttackAudio.clip = m_ChargingClip;
-            m_AttackAudio.Play();
+            attackAudio.clip = chargingClip;
+            attackAudio.Play();
 
         }
-        else if (Input.GetButton(m_FireButton) && !m_Fired)
+        else if (Input.GetButton(fireButton) && !fired)
         {
             //ボタンを押している時
             //力を増やしていく
-            m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
+            currentLaunchForce += chargeSpeed * Time.deltaTime;
             //UIも更新する
-            m_AimSlider.value = m_CurrentLaunchForce;
+            aimSlider.value = currentLaunchForce;
 
 
         }
-        else if (Input.GetButtonUp(m_FireButton) && !m_Fired)
+        else if (Input.GetButtonUp(fireButton) && !fired)
         {
             //ボタンを離した時
-            m_Fired = true;
+            fired = true;
             //アニメーション
-            m_Animator.SetTrigger("Attack");
+            animator.SetTrigger("Attack");
         }
 
     }
@@ -117,32 +112,32 @@ public class PlayerAttack : MonoBehaviour
         //AttackTransformのローカルの位置と回転を変えてから発射する
         //位置と角度の調整はもっとうまいやり方ありそう
 
-        if (m_PowerUp)
+        if (powerUp)
         {
             for (int i = 0; i < 3; i++)
             {
                 switch (i)
                 {
                     case 0:
-                        m_AttackTransform.localPosition += new Vector3(-1, 0, 0);
-                        m_AttackTransform.localRotation *= Quaternion.Euler(0, -15, 0);
+                        attackTransform.localPosition += new Vector3(-1, 0, 0);
+                        attackTransform.localRotation *= Quaternion.Euler(0, -15, 0);
                         break;
 
                     case 1:
-                        m_AttackTransform.localPosition += new Vector3(2, 0, 0);
-                        m_AttackTransform.localRotation *= Quaternion.Euler(0, 30, 0);
+                        attackTransform.localPosition += new Vector3(2, 0, 0);
+                        attackTransform.localRotation *= Quaternion.Euler(0, 30, 0);
                         break;
 
                     case 2:
-                        m_AttackTransform.localPosition += new Vector3(-1, 0, 0);
-                        m_AttackTransform.localRotation *= Quaternion.Euler(0, -15, 0);
+                        attackTransform.localPosition += new Vector3(-1, 0, 0);
+                        attackTransform.localRotation *= Quaternion.Euler(0, -15, 0);
                         break;
 
                 }
 
                 //発射位置、角度を設定してインスタンス化 
                 //同時にrigidbodyへの参照を格納している
-                Rigidbody bombInstance = Instantiate(m_Bomb, m_AttackTransform.position, m_AttackTransform.rotation) as Rigidbody;
+                Rigidbody bombInstance = Instantiate(bomb, attackTransform.position, attackTransform.rotation) as Rigidbody;
 
                 //爆発音を鳴らすのは一個だけにする
                 if (i == 2)
@@ -151,34 +146,34 @@ public class PlayerAttack : MonoBehaviour
                 }
 
                 //速度の設定　→　方向 * 大きさ
-                bombInstance.velocity = m_AttackTransform.forward * m_CurrentLaunchForce;
+                bombInstance.velocity = attackTransform.forward * currentLaunchForce;
 
             }
         }
         else
         {
-            Rigidbody bombInstance = Instantiate(m_Bomb, m_AttackTransform.position, m_AttackTransform.rotation) as Rigidbody;
+            Rigidbody bombInstance = Instantiate(bomb, attackTransform.position, attackTransform.rotation) as Rigidbody;
             bombInstance.GetComponent<BombExplosion>().ChangeSoundFlag();
-            bombInstance.velocity = m_AttackTransform.forward * m_CurrentLaunchForce;
+            bombInstance.velocity = attackTransform.forward * currentLaunchForce;
         }
 
         //オーディオ
-        m_AttackAudio.clip = m_FireClip;
-        m_AttackAudio.Play();
+        attackAudio.clip = fireClip;
+        attackAudio.Play();
 
         //念の為forceを初期値に戻しておく
-        m_CurrentLaunchForce = m_MinLaunchForce;
+        currentLaunchForce = minLaunchForce;
     }
 
     public void ChangeFireFlag()
     {
-        m_Fired = false;
+        fired = false;
     }
 
     //移動のアニメーションを制御するために取得する (今は未使用)
     public bool GetFireFlag()
     {
-        return m_Fired;
+        return fired;
     }
 
     public void PowerUp()
@@ -189,21 +184,21 @@ public class PlayerAttack : MonoBehaviour
     IEnumerator PowerUpCoroutine()
     {
         //追加でおにぎりとった場合に対応する
-        m_PowerUpCount++;
+        powerUpCount++;
         //Debug.Log(m_PowerUpCount)
-;
-        m_PowerUp = true;
-        m_PowerUpEffect.SetActive(true);
+        ;
+        powerUp = true;
+        powerUpEffect.SetActive(true);
 
         yield return new WaitForSeconds(20f);
 
-        m_PowerUpCount--;
+        powerUpCount--;
         //Debug.Log(m_PowerUpCount);
 
-        if(m_PowerUpCount == 0)
+        if (powerUpCount == 0)
         {
-            m_PowerUp = false;
-            m_PowerUpEffect.SetActive(false);
+            powerUp = false;
+            powerUpEffect.SetActive(false);
         }
 
     }

@@ -2,70 +2,61 @@
 
 public class BombExplosion : MonoBehaviour
 {
-    public LayerMask m_TankMask;
-    public ParticleSystem m_ExplosionParticles;
-    public float m_MaxDamage = 100f;
-    public float m_ExplosionForce = 1000f;
-    public float m_MaxLifeTime = 2f;
-    public float m_ExplosionRadius = 5f;
+    public LayerMask playerMask;
+    public ParticleSystem explosionParticles;
+    public float maxDamage = 100f;
+    public float explosionForce = 1000f;
+    public float maxLifeTime = 2f;
+    public float explosionRadius = 5f;
 
-    public AudioSource m_ExplosionAudio;
+    public AudioSource explosionAudio;
 
-    private bool m_SoundFlag = false;
+    private bool soundFlag = false;
 
 
     private void Start()
     {
-        Destroy(gameObject, m_MaxLifeTime);
+        Destroy(gameObject, maxLifeTime);
     }
 
 
     private void OnTriggerEnter(Collider other)
     {
-        // Collect all the colliders in a sphere from the shell's current position to a radius of the explosion radius.
-        Collider[] colliders = Physics.OverlapSphere(transform.position, m_ExplosionRadius, m_TankMask);
+        Collider[] colliders = Physics.OverlapSphere(transform.position, explosionRadius, playerMask);
 
-        // Go through all the colliders...
         for (int i = 0; i < colliders.Length; i++)
         {
-            // ... and find their rigidbody.
             Rigidbody targetRigidbody = colliders[i].GetComponent<Rigidbody>();
 
-            // If they don't have a rigidbody, go on to the next collider.
             if (!targetRigidbody)
                 continue;
 
-            // Add an explosion force.
-            targetRigidbody.AddExplosionForce(m_ExplosionForce, transform.position, m_ExplosionRadius);
+            targetRigidbody.AddExplosionForce(explosionForce, transform.position, explosionRadius);
 
-            // Find the TankHealth script associated with the rigidbody.
             PlayerHealth targetHealth = targetRigidbody.GetComponent<PlayerHealth>();
 
-            // // If there is no TankHealth script attached to the gameobject, go on to the next collider.
             if (!targetHealth)
                 continue;
 
-            // Calculate the amount of damage the target should take based on it's distance from the shell.
             float damage = CalculateDamage(targetRigidbody.position);
 
-            // // Deal this damage to the tank.
             targetHealth.TakeDamage(damage);
         }
 
         //エフェクト→まずは親子関係を外す
-        m_ExplosionParticles.transform.parent = null;
+        explosionParticles.transform.parent = null;
 
         //パーティクルの再生
-        m_ExplosionParticles.Play();
+        explosionParticles.Play();
 
         //オーディオ
-        if (m_SoundFlag)
+        if (soundFlag)
         {
-            m_ExplosionAudio.Play();
+            explosionAudio.Play();
         }
 
         //エフェクトの破壊(パーティクルの再生時間分を待ってから)
-        Destroy(m_ExplosionParticles.gameObject, m_ExplosionParticles.main.duration);
+        Destroy(explosionParticles.gameObject, explosionParticles.main.duration);
 
 
         // Destroy the shell.
@@ -75,19 +66,14 @@ public class BombExplosion : MonoBehaviour
 
     private float CalculateDamage(Vector3 targetPosition)
     {
-        // Create a vector from the shell to the target.
         Vector3 explosionToTarget = targetPosition - transform.position;
 
-        // Calculate the distance from the shell to the target.
         float explosionDistance = explosionToTarget.magnitude;
 
-        // Calculate the proportion of the maximum distance (the explosionRadius) the target is away.
-        float relativeDistance = (m_ExplosionRadius - explosionDistance) / m_ExplosionRadius;
+        float relativeDistance = (explosionRadius - explosionDistance) / explosionRadius;
 
-        // Calculate damage as this proportion of the maximum possible damage.
-        float damage = relativeDistance * m_MaxDamage;
+        float damage = relativeDistance * maxDamage;
 
-        // Make sure that the minimum damage is always 0.
         damage = Mathf.Max(0f, damage);
 
         return damage;
@@ -95,7 +81,7 @@ public class BombExplosion : MonoBehaviour
 
     public void ChangeSoundFlag()
     {
-        m_SoundFlag = true;
+        soundFlag = true;
     }
 
 

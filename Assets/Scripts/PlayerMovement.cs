@@ -5,61 +5,55 @@ using DG.Tweening;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public int m_PlayerNumber = 1;
-    public float m_Speed;
+    public int playerNumber = 1;
+    public float speed = 5;
 
 
-    private Rigidbody m_Rigidbody;
-    private float m_MovementInputValueY;
-    private float m_MovementInputValueX;
-    private string m_MovementXAxisName; 
-    private string m_MovementYAxisName;        
+    private Rigidbody playerRigidbody;
+    private float movementInputValueY;
+    private float movementInputValueX;
+    private string movementXAxisName;
+    private string movementYAxisName;
 
-    private Animator m_Animator;
+    private Animator animator;
     private float currentAngle;
 
-    private PlayerAttack m_PlayerAttack;
+    private PlayerAttack playerAttack;
 
 
     private void Awake()
     {
-        m_Rigidbody = GetComponent<Rigidbody>();
-        m_Animator = GetComponent<Animator>();
-        m_PlayerAttack = GetComponent<PlayerAttack>();
+        playerRigidbody = GetComponent<Rigidbody>();
+        animator = GetComponent<Animator>();
+        playerAttack = GetComponent<PlayerAttack>();
     }
 
     private void OnEnable()
     {
-        m_Rigidbody.isKinematic = false;
+        playerRigidbody.isKinematic = false;
 
-        m_MovementInputValueX = 0f;
-        m_MovementInputValueY = 0f;
+        movementInputValueX = 0f;
+        movementInputValueY = 0f;
 
     }
 
     private void OnDisable()
     {
-        m_Rigidbody.isKinematic = true;
-
+        playerRigidbody.isKinematic = true;
     }
 
-    // Start is called before the first frame update
     private void Start()
     {
-        m_MovementXAxisName = "Horizontal" + m_PlayerNumber;
-        m_MovementYAxisName = "Vertical" + m_PlayerNumber;
+        movementXAxisName = "Horizontal" + playerNumber;
+        movementYAxisName = "Vertical" + playerNumber;
 
     }
-
-    // Update is called once per frame
     private void Update()
     {
 
         //入力
-        m_MovementInputValueX = Input.GetAxis(m_MovementXAxisName);
-        m_MovementInputValueY = Input.GetAxis(m_MovementYAxisName);
-        //Debug.Log(m_MovementInputValueX  + "," + m_MovementInputValueY);
-
+        movementInputValueX = Input.GetAxis(movementXAxisName);
+        movementInputValueY = Input.GetAxis(movementYAxisName);
 
         //後ろ方向へは移動できないようにする
         // if(m_MovementInputValueY < 0) 
@@ -69,15 +63,15 @@ public class PlayerMovement : MonoBehaviour
 
         //Attackアニメーション中は移動・回転しないようにする
         //アニメーションの名前 or フラグ条件　どっちが良いか？
-        if (m_Animator.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
         //if(m_PlayerAttack.GetFireFlag())
         {
-            m_MovementInputValueX = 0;
-            m_MovementInputValueY = 0;
+            movementInputValueX = 0;
+            movementInputValueY = 0;
         }
 
         //アニメーション
-        m_Animator.SetFloat("Run", m_MovementInputValueX * m_MovementInputValueX + m_MovementInputValueY * m_MovementInputValueY);
+        animator.SetFloat("Run", movementInputValueX * movementInputValueX + movementInputValueY * movementInputValueY);
 
     }
 
@@ -98,22 +92,17 @@ public class PlayerMovement : MonoBehaviour
     private void Move()
     {
         //移動したい方向ベクトルを計算
-        //ワールド空間でのベクトルであることに注意
-
-        //Vector3 movement = transform.forward * m_MovementInputValue * m_Speed * Time.deltaTime;
-        //Vector3 movement = (Vector3.right * m_MovementInputValueX + Vector3.forward * m_MovementInputValueY).normalized * m_Speed * Time.deltaTime;
-        Vector3 movement = new Vector3(m_MovementInputValueX, 0, m_MovementInputValueY).normalized * m_Speed * Time.deltaTime;
-        //Debug.Log(movement);
+        Vector3 movement = new Vector3(movementInputValueX, 0, movementInputValueY).normalized * speed * Time.deltaTime;
 
         //移動
-        m_Rigidbody.MovePosition(m_Rigidbody.position + movement);
+        playerRigidbody.MovePosition(playerRigidbody.position + movement);
 
         //向きを回転させる
         //入力がない時でも回転を保存する
-        if (m_MovementInputValueX * m_MovementInputValueX + m_MovementInputValueY * m_MovementInputValueY > 0.01f)
+        if (movementInputValueX * movementInputValueX + movementInputValueY * movementInputValueY > 0.01f)
         {
-            float targetAngle = Mathf.Atan2(m_MovementInputValueX, m_MovementInputValueY) * Mathf.Rad2Deg;
-        
+            float targetAngle = Mathf.Atan2(movementInputValueX, movementInputValueY) * Mathf.Rad2Deg;
+
             currentAngle = Mathf.Lerp(currentAngle, targetAngle, Time.deltaTime * 10.0f);
 
             transform.rotation = Quaternion.Euler(0, currentAngle, 0);

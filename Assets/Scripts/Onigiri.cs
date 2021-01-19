@@ -4,40 +4,38 @@ using UnityEngine;
 
 public class Onigiri : MonoBehaviour
 {
-    public ParticleSystem m_GetParticleEffect;
-    public AudioSource m_GetAudioSource;
+    public ParticleSystem getParticleEffect;
+    public AudioSource getAudioSource;
 
-    private OnigiriGenerator m_Onigirigenerator;
+    private OnigiriGenerator onigirigenerator;
 
-    // Start is called before the first frame update
     void Start()
     {
-        m_Onigirigenerator = GameObject.Find("OnigiriGenerator").GetComponent<OnigiriGenerator>();
-        
+        onigirigenerator = GameObject.Find("OnigiriGenerator").GetComponent<OnigiriGenerator>();
+
     }
 
-    // Update is called once per frame
     void Update()
     {
-        transform.Rotate(new Vector3(0,90 * Time.deltaTime,0));
-        
+        transform.Rotate(new Vector3(0, 90 * Time.deltaTime, 0));
+
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.tag == "Player")
+        if (other.gameObject.tag == "Player")
         {
             //プレイヤーのパワーアップ
             other.GetComponent<PlayerAttack>().PowerUp();
 
             //エフェクト
-            m_GetParticleEffect.transform.parent = null;
-            m_GetParticleEffect.Play();
-            m_GetAudioSource.Play();
-            Destroy(m_GetParticleEffect.gameObject,m_GetParticleEffect.main.duration);
+            getParticleEffect.transform.parent = null;
+            getParticleEffect.Play();
+            getAudioSource.Play();
+            Destroy(getParticleEffect.gameObject, getParticleEffect.main.duration);
 
             //おにぎりの破壊
-            m_Onigirigenerator.m_GeneratedOnigiriList.Remove(gameObject);
+            onigirigenerator.m_GeneratedOnigiriList.Remove(gameObject);
             Destroy(gameObject);
         }
     }
