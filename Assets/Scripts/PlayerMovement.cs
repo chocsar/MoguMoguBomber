@@ -8,24 +8,21 @@ public class PlayerMovement : MonoBehaviour
     public int playerNumber = 1;
     public float speed = 5;
 
-
     private Rigidbody playerRigidbody;
-    private float movementInputValueY;
-    private float movementInputValueX;
+    private Animator animator;
+
     private string movementXAxisName;
     private string movementYAxisName;
+    private float movementInputValueX;
+    private float movementInputValueY;
 
-    private Animator animator;
     private float currentAngle;
-
-    private PlayerAttack playerAttack;
 
 
     private void Awake()
     {
         playerRigidbody = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
-        playerAttack = GetComponent<PlayerAttack>();
     }
 
     private void OnEnable()
@@ -62,9 +59,7 @@ public class PlayerMovement : MonoBehaviour
         // } 
 
         //Attackアニメーション中は移動・回転しないようにする
-        //アニメーションの名前 or フラグ条件　どっちが良いか？
         if (animator.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
-        //if(m_PlayerAttack.GetFireFlag())
         {
             movementInputValueX = 0;
             movementInputValueY = 0;
