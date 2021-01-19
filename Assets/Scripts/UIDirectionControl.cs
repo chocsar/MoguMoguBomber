@@ -16,6 +16,7 @@ public class UIDirectionControl : MonoBehaviour
     {
         if (useRelativeRotation)
         {
+            //UIの回転を初期のまま保つ
             transform.rotation = relativeRotation;
         }
     }
