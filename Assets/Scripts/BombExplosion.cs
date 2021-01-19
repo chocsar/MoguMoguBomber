@@ -2,16 +2,16 @@
 
 public class BombExplosion : MonoBehaviour
 {
-    public LayerMask playerMask;
-    public ParticleSystem explosionParticles;
     public float maxDamage = 100f;
     public float explosionForce = 1000f;
     public float maxLifeTime = 2f;
     public float explosionRadius = 5f;
 
-    public AudioSource explosionAudio;
+    [SerializeField] private LayerMask playerMask;
+    [SerializeField] private ParticleSystem explosionParticle;
+    [SerializeField] private AudioSource explosionAudio;
 
-    private bool soundFlag = false;
+    private bool soundFlag = false;//爆発音を鳴らすかどうか
 
 
     private void Start()
@@ -19,61 +19,62 @@ public class BombExplosion : MonoBehaviour
         Destroy(gameObject, maxLifeTime);
     }
 
-
     private void OnTriggerEnter(Collider other)
     {
+        //爆発範囲内のPlayerのコライダーを取得
         Collider[] colliders = Physics.OverlapSphere(transform.position, explosionRadius, playerMask);
 
         for (int i = 0; i < colliders.Length; i++)
         {
             Rigidbody targetRigidbody = colliders[i].GetComponent<Rigidbody>();
 
-            if (!targetRigidbody)
-                continue;
+            //nullの場合
+            if (!targetRigidbody) continue;
 
+            //距離に応じて力を加える
             targetRigidbody.AddExplosionForce(explosionForce, transform.position, explosionRadius);
+
 
             PlayerHealth targetHealth = targetRigidbody.GetComponent<PlayerHealth>();
 
-            if (!targetHealth)
-                continue;
+            //nullの場合
+            if (!targetHealth) continue;
 
+            //ダメージ計算
             float damage = CalculateDamage(targetRigidbody.position);
-
             targetHealth.TakeDamage(damage);
         }
 
-        //エフェクト→まずは親子関係を外す
-        explosionParticles.transform.parent = null;
+        //エフェクト再生
+        explosionParticle.transform.parent = null;
+        explosionParticle.Play();
 
-        //パーティクルの再生
-        explosionParticles.Play();
-
-        //オーディオ
+        //オーディオ再生
         if (soundFlag)
         {
             explosionAudio.Play();
         }
 
         //エフェクトの破壊(パーティクルの再生時間分を待ってから)
-        Destroy(explosionParticles.gameObject, explosionParticles.main.duration);
+        Destroy(explosionParticle.gameObject, explosionParticle.main.duration);
 
-
-        // Destroy the shell.
+        //自らの破壊
         Destroy(gameObject);
     }
 
 
     private float CalculateDamage(Vector3 targetPosition)
     {
+        //方向ベクトル計算
         Vector3 explosionToTarget = targetPosition - transform.position;
-
+        //長さ計算
         float explosionDistance = explosionToTarget.magnitude;
-
+        //半径に対する割合計算
         float relativeDistance = (explosionRadius - explosionDistance) / explosionRadius;
-
+        //ダメージ計算
         float damage = relativeDistance * maxDamage;
 
+        //エッジケース対策（負になる場合がある）
         damage = Mathf.Max(0f, damage);
 
         return damage;
