@@ -8,16 +8,16 @@ public class GameManager : MonoBehaviour
     public int numRoundsToWin = 5;
     public float startDelay = 3f;
     public float endDelay = 3f;
-    public CameraControl cameraControl;
-    public Text messageText;
-    public GameObject playerPrefab;
-    public PlayerManager[] playerManagers;
 
-    public OnigiriGenerator onigiriGenerator;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private PlayerManager[] playerManagers;
+    [SerializeField] private OnigiriGenerator onigiriGenerator;
+    [SerializeField] private CameraControl cameraControl;
+    [SerializeField] private Text messageText;
 
     private int roundNumber;
-    private WaitForSeconds startWait;
-    private WaitForSeconds endWait;
+    private WaitForSeconds startWait;//ラウンドスタート時の待機時間
+    private WaitForSeconds endWait;//ラウンド終了時の待機時間
     private PlayerManager roundWinner;
     private PlayerManager gameWinner;
 
@@ -44,7 +44,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
     private void SetCameraTargets()
     {
         Transform[] targets = new Transform[playerManagers.Length];
@@ -60,17 +59,18 @@ public class GameManager : MonoBehaviour
     private IEnumerator GameLoop()
     {
         yield return StartCoroutine(RoundStarting());
-
         yield return StartCoroutine(RoundPlaying());
-
         yield return StartCoroutine(RoundEnding());
 
+        //ゲームの終了
         if (gameWinner != null)
         {
             SceneManager.LoadScene(0);
         }
+        //ラウンドの終了
         else
         {
+            //次のラウンドへ
             StartCoroutine(GameLoop());
         }
     }
@@ -84,6 +84,8 @@ public class GameManager : MonoBehaviour
         cameraControl.SetStartPositionAndSize();
 
         roundNumber++;
+
+        //メッセージテキストを表示
         if (roundNumber == 1)
         {
             messageText.text = "MOGUMOGU BOMBER!\n";
@@ -94,8 +96,10 @@ public class GameManager : MonoBehaviour
             messageText.text = "ROUND " + roundNumber;
         }
 
+        //おにぎり生成
         onigiriGenerator.GenerateOnigiri();
 
+        //一定時間待機
         yield return startWait;
     }
 
@@ -106,60 +110,75 @@ public class GameManager : MonoBehaviour
 
         messageText.text = string.Empty;
 
+        //勝敗が決まるまで待機
         while (!OnePlayerLeft())
         {
             yield return null;
         }
     }
 
-
     private IEnumerator RoundEnding()
     {
         DisablePlayerControl();
 
+        //ラウンド勝利者の取得
         roundWinner = null;
-
         roundWinner = GetRoundWinner();
+        if (roundWinner != null) roundWinner.wins++;
 
-        if (roundWinner != null)
-            roundWinner.wins++;
-
+        //ゲーム勝利者の取得
         gameWinner = GetGameWinner();
 
+        //メッセージテキストの表示
         string message = EndMessage();
         messageText.text = message;
 
+        //おにぎりの破壊
         onigiriGenerator.DestroyAllOnigiri();
 
+        //一定時間待機
         yield return endWait;
     }
 
-
+    /// <summary>
+    /// プレイヤーが一人以下になったかどうか調べる
+    /// </summary>
+    /// <returns>プレイヤーが一人以下になったかどうか</returns>
     private bool OnePlayerLeft()
     {
         int numPlayersLeft = 0;
 
+        //アクティブなプレイヤーをカウントする
         for (int i = 0; i < playerManagers.Length; i++)
         {
-            if (playerManagers[i].instance.activeSelf)
-                numPlayersLeft++;
+            if (playerManagers[i].instance.activeSelf) numPlayersLeft++;
         }
 
         return numPlayersLeft <= 1;
     }
 
+    /// <summary>
+    /// ラウンドの勝利者を取得する
+    /// </summary>
+    /// <returns>ラウンド勝利者のPlayerManager</returns>
     private PlayerManager GetRoundWinner()
     {
+        //アクティブなプレイヤーを検索する
         for (int i = 0; i < playerManagers.Length; i++)
         {
             if (playerManagers[i].instance.activeSelf)
+            {
                 return playerManagers[i];
+            }
         }
 
         return null;
     }
 
-
+    /// <summary>
+    /// ゲーム勝利者を取得する
+    /// </summary>
+    /// <returns>ゲーム勝利者のPlayerManger</returns>
     private PlayerManager GetGameWinner()
     {
         for (int i = 0; i < playerManagers.Length; i++)
@@ -171,7 +190,10 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
-
+    /// <summary>
+    /// ラウンド終了時に表示する文字列を作成する
+    /// </summary>
+    /// <returns>ラウンド終了時に表示する文字列</returns>
     private string EndMessage()
     {
         string message = "DRAW!";
